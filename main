@@ -1,0 +1,111 @@
+#Do not remove these imports, they are ALL esential for the code to run
+import cv2
+from google.colab.patches import cv2_imshow
+import numpy as np
+import time
+
+#///*** READ ME! ***///
+
+#This code was exclusively written by Martin Elias
+
+#This code successfully takes an image and makes the image pixelized using the "brickify" function. Once the image is 
+#pixelized, it then converts the image to black and white using the "blackwhite" function. This will allow you to 
+#take the image and build it in real life from black, white, and grey lego bricks (flat 1x1 tiles, each tile is a pixel). In other words, 
+#the image becomes a mosaic of a smaller version of the orignal image
+
+#Remember, this is a Python script so indents are important!
+#Remember to upload image path below and a text file named "instructions.txt"
+img = cv2.imread('/content/abraham_lincoln.jpg')  #load any image in jpg format
+
+
+def brickify(im):
+    rows,cols,channels = im.shape #find dimensions of inputted image
+    numofwidth  = cols / 5 #change this according to desired size of the final image (larger number means smaller image and vice versa)
+    numofheight = rows / 5 #this number must match the number above
+    newrows = int(numofheight)  #convert to integers because we cannot have a fraction of a row
+    newcols = int(numofwidth)   #convert to integers because we cannot have a fraction of a column
+    outImg = np.zeros((newrows, newcols, channels),im.dtype) #creates a new image of all zeros (an empty image to be manipulated)
+    counter = 0     #initiate counter at 0
+    indexRow = -1;  #must start at -1 because index of any image starts at 0
+    indexCol = -1   #must start at -1 because index of any image starts at 0
+
+    for i in range(rows): 
+        for j in range(cols):
+            
+            if (((i+1) % 5) == 0) and (((j+1) % 5) == 0): #change this number to match numofwidth and numofheight
+                if counter == 0:
+                  indexRow = indexRow + 1
+                counter = counter + 1
+                indexCol = indexCol + 1
+                if counter == newcols: #if the counter reaches its maximum used to be numofwidth
+                    counter = 0 #resets the counter once we have reached the last column
+                    indexCol = 0 #resets indexCol
+                outImg[indexRow][indexCol] = im[i][j] #the axis in the error statement is the row number
+
+
+    return outImg 
+
+def blackwhite(im): #put outImg in here
+    rows,cols,channels = im.shape #find the dimensions of the new input image
+    white = 0   #count number of white pixels
+    grey = 0    #count number of grey pixels
+    black = 0   #count number of black pixels
+    #The max number for any red, green, or blue pixel is 255 and the min is 0. Different combinations yield different colors
+    for i in range(rows): 
+        for j in range(cols):
+          b,g,r = (im[i, j])  #gives red, green, and blue values for that specific pixel
+          if (b <= 100 and g <= 100 and r <= 100):  #if () then make the pixel black
+            b = 0
+            g = 0
+            r = 0
+            im[i, j] = b,g,r                #image at [i,j] will have the new corresponding blue, green, and red values
+            black = black + 1               #this is essentially a counter for the number of black pixels
+            instructionMatrix[i, j] = 'black' #was b #pixel at [i,j] will be a black pixel
+          elif (b >= 200 and g >= 200 and r >= 200):  #elif () then make the pixel white
+            b = 255
+            g = 255
+            r = 255
+            im[i, j] = b,g,r                #image at [i,j] will have the new corresponding blue, green, and red values
+            white = white + 1               #this is essentially a counter for the number of white pixels
+            instructionMatrix[i, j] = 'white' #was w #pixel at [i,j] will be a white pixel
+          else: #else then make the pixel grey
+            b = 150 #should be 150
+            g = 150 #should be 150
+            r = 150 #should be 150
+            im[i, j] = b,g,r                #image at [i,j] will have the new corresponding blue, green, and red values
+            grey = grey + 1                 #this is essentially a counter for the number of grey pixels
+            instructionMatrix[i, j] = 'grey' #was g #pixel at [i,j] will be a grey pixel
+ 
+    print(white, black, grey) #print how many pixels of each color
+    
+    return im
+
+def instructionFunc():
+  with open('instructions.txt', 'w') as writefile: #opens the instructions.txt file to write to (this file needs to be uploaded within the google colab environment)
+    for i in range(rows1): 
+        for j in range(cols1):
+            converti=str(i)           #convert int i to s tring
+            writefile.write(converti) #write the i index (row)
+            writefile.write(" ")      #print space
+            convertj=str(j)           #convert int j to a string
+            writefile.write(convertj) #write the j index (col)
+            writefile.write(" ")      #print space
+            writefile.write(instructionMatrix[i,j]) #print pixel color (black, grey, white) of index i,j
+            writefile.write("\n")     #write newline
+
+
+#///------------MAIN-----------///
+def main():                       #this is the main function where everything begins to run and all commands are executed
+    outImg = brickify(img)        #first brickify the image
+    global instructionMatrix      #must be global to use in other functions
+    global rows1                  #must be global to use in other functions
+    global cols1                  #must be global to use in other functions
+    rows1,cols1,channels = outImg.shape #find the new size of the image outputted from brickify, eg. outImg
+    instructionMatrix = np.zeros((rows1, cols1), dtype = 'str') #creates a new image of all zeros (an empty image to be manipulated) and data type is string
+    finalimg = blackwhite(outImg) #next, make the image in greyscale (black, white, and grey pixels only)
+    cv2_imshow(finalimg)          #show the image in the output
+    print(finalimg.shape)         #Eureka!  --> this command will give the dimensions of the image
+    instructionFunc()             #This function will writes all the instructions to "instructions.txt". Simply download it and begin project
+if __name__ == "__main__":
+    main()
+
